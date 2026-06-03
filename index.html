@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NINA School - Wissenschaftlicher Quellen-Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #2ba84f;
+      --secondary: #c5f135;
+      --tertiary: #4dd9d9;
+      --bg-light: #fffbfe;
+      --bg-dark: #1a1a1a;
+      --surface: #f7f2fa;
+      --surface-variant: #ece0f0;
+      --text-dark: #1c1b1f;
+      --text-light: #e8e8e8;
+      --outline: #79747e;
+      --outline-variant: #cac4d0;
+
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 16px;
+      --spacing-lg: 24px;
+      --spacing-xl: 32px;
+      --spacing-2xl: 48px;
+
+      --radius-sm: 8px;
+      --radius-md: 16px;
+      --radius-lg: 28px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #fffbfe 0%, #f7f2fa 100%);
+      color: var(--text-dark);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 251, 254, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      border-bottom: 1px solid var(--outline-variant);
+      padding: var(--spacing-md);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+      text-decoration: none;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 20px;
+    }
+
+    .logo img {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-sm);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: var(--spacing-lg);
+      list-style: none;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-dark);
+      font-weight: 500;
+      font-size: 14px;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    /* Hero Section */
+    .hero {
+      margin-top: 80px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: var(--spacing-2xl) var(--spacing-lg);
+      text-align: center;
+      min-height: 500px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .hero-icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 20px 60px rgba(43, 168, 79, 0.2);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 700;
+      margin-bottom: var(--spacing-md);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -1px;
+    }
+
+    .hero p {
+      font-size: 18px;
+      color: var(--outline);
+      margin-bottom: var(--spacing-xl);
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.8;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: var(--spacing-md);
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      font-family: 'Roboto', sans-serif;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, #1d7a3a 100%);
+      color: white;
+      padding: var(--spacing-md) var(--spacing-xl);
+      border-radius: var(--radius-lg);
+      box-shadow: 0 8px 24px rgba(43, 168, 79, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(43, 168, 79, 0.4);
+    }
+
+    .btn-primary:active {
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--primary);
+      padding: var(--spacing-md) var(--spacing-xl);
+      border-radius: var(--radius-lg);
+      border: 2px solid var(--primary);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(43, 168, 79, 0.1);
+    }
+
+    /* Features Section */
+    .features {
+      max-width: 1200px;
+      margin: var(--spacing-2xl) auto;
+      padding: 0 var(--spacing-lg);
+    }
+
+    .section-title {
+      font-size: 40px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: var(--spacing-2xl);
+      color: var(--text-dark);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-2xl);
+    }
+
+    .feature-card {
+      background: white;
+      border-radius: var(--radius-md);
+      padding: var(--spacing-lg);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      transition: all 0.3s ease;
+      border: 1px solid var(--outline-variant);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 32px rgba(43, 168, 79, 0.15);
+      border-color: var(--primary);
+    }
+
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 100%);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 28px;
+      margin-bottom: var(--spacing-md);
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: var(--spacing-sm);
+      color: var(--text-dark);
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--outline);
+      line-height: 1.6;
+    }
+
+    /* Design System Section */
+    .design-section {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--tertiary) 100%);
+      color: white;
+      padding: var(--spacing-2xl) var(--spacing-lg);
+      border-radius: var(--radius-lg);
+      margin: var(--spacing-2xl) 0;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .design-section h2 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .color-palette {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: var(--spacing-md);
+      margin-top: var(--spacing-lg);
+    }
+
+    .color-box {
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-md);
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* Footer */
+    footer {
+      background: var(--text-dark);
+      color: var(--text-light);
+      padding: var(--spacing-2xl) var(--spacing-lg);
+      text-align: center;
+      border-top: 1px solid var(--outline-variant);
+      margin-top: var(--spacing-2xl);
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .footer-content p {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 36px;
+      }
+
+      .hero-icon {
+        width: 80px;
+        height: 80px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        margin-top: 100px;
+      }
+    }
+
+    /* Smooth Animations */
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .feature-card {
+      animation: slideInUp 0.6s ease-out;
+    }
+
+    .feature-card:nth-child(2) {
+      animation-delay: 0.1s;
+    }
+
+    .feature-card:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+
+    .feature-card:nth-child(4) {
+      animation-delay: 0.3s;
+    }
+
+    .feature-card:nth-child(5) {
+      animation-delay: 0.4s;
+    }
+
+    .feature-card:nth-child(6) {
+      animation-delay: 0.5s;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <a href="#" class="logo">
+        <img src="icons/icon1080-green.png" alt="NINA School">
+        NINA School
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#design">Design</a></li>
+        <li><a href="#footer">Kontakt</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <img src="icons/icon1080-green.png" alt="NINA School Logo" class="hero-icon">
+    <h1>NINA School</h1>
+    <p>Dein wissenschaftlicher Quellen-Manager für Schularbeiten. Markiere Text, speichere Zitate und exportiere professionelle Quellenverzeichnisse.</p>
+    <div class="cta-buttons">
+      <button class="btn-primary">✓ Extension laden</button>
+      <button class="btn-secondary">Mehr erfahren</button>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <h2 class="section-title">Umfangreiche Features</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">📝</div>
+        <h3>Text-Markierung</h3>
+        <p>Markiere Text auf jeder Webseite und speichere es direkt mit Quellenangaben.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🗂️</div>
+        <h3>Projekt-Verwaltung</h3>
+        <p>Organisiere deine Zitate in verschiedenen Projekten für bessere Übersicht.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📌</div>
+        <h3>Automatische Quellenangaben</h3>
+        <p>URL, Seitentitel und Zeitstempel werden automatisch erfasst und gespeichert.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📓</div>
+        <h3>Notizen hinzufügen</h3>
+        <p>Schreibe eigene Notizen zu jedem Zitat und halten deine Gedanken fest.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📥</div>
+        <h3>Export-Funktionen</h3>
+        <p>Exportiere alle Zitate als Markdown oder formatiertes Quellenverzeichnis.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🌙</div>
+        <h3>Modernes Design</h3>
+        <p>Material Design 3 mit dunklem Theme und angenehmen Farben zum Arbeiten.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Design System Section -->
+  <section class="design-section" id="design">
+    <div class="design-content">
+      <h2>Material Design 3</h2>
+      <p>Gebaut nach modernen Design-Standards mit fließenden Animationen und durchdachter UX.</p>
+
+      <div class="color-palette">
+        <div class="color-box">
+          <strong>Primary</strong><br>
+          #2ba84f
+        </div>
+        <div class="color-box">
+          <strong>Secondary</strong><br>
+          #c5f135
+        </div>
+        <div class="color-box">
+          <strong>Tertiary</strong><br>
+          #4dd9d9
+        </div>
+        <div class="color-box">
+          <strong>Background</strong><br>
+          #fffbfe / #1a1a1a
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="footer">
+    <div class="footer-content">
+      <p>&copy; 2026 NINA School - Wissenschaftlicher Quellen-Manager</p>
+      <p style="margin-top: var(--spacing-md); font-size: 12px; opacity: 0.6;">
+        Gebaut mit Material Design 3 • Chrome Extension
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

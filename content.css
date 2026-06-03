@@ -1,0 +1,167 @@
+/* NINA School - In-Page Highlight Styles */
+
+/* Floating Highlight Button */
+#nina-floating-highlighter {
+  position: absolute !important;
+  z-index: 2147483647 !important;
+  background: linear-gradient(135deg, #4dd9d9, #2ba8a8) !important;
+  color: #000000 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 30px !important;
+  padding: 8px 16px !important;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+  box-shadow: 0 8px 24px rgba(77, 217, 217, 0.35), 0 2px 6px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(8px) scale(0.9) !important;
+  user-select: none !important;
+}
+
+#nina-floating-highlighter.visible {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0) scale(1) !important;
+}
+
+#nina-floating-highlighter:hover {
+  background: linear-gradient(135deg, #2ba8a8, #1a7f7f) !important;
+  box-shadow: 0 10px 28px rgba(77, 217, 217, 0.45), 0 3px 8px rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
+#nina-floating-highlighter:active {
+  transform: translateY(0) scale(0.98) !important;
+}
+
+#nina-floating-highlighter svg {
+  width: 14px !important;
+  height: 14px !important;
+  fill: currentColor !important;
+  display: block !important;
+  transition: transform 0.2s ease !important;
+}
+
+#nina-floating-highlighter:hover svg {
+  transform: rotate(-10deg) scale(1.1) !important;
+}
+
+/* Page Highlights */
+.nina-highlight-span {
+  background-color: rgba(77, 217, 217, 0.25) !important; /* Light Cyan Highlight */
+  border-bottom: 2px solid rgba(197, 241, 53, 0.7) !important;
+  border-radius: 2px !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease, border-bottom-color 0.2s ease !important;
+  position: relative !important;
+}
+
+.nina-highlight-span:hover {
+  background-color: rgba(77, 217, 217, 0.4) !important;
+  border-bottom-color: rgba(197, 241, 53, 1) !important;
+}
+
+/* Tooltip tag showing brand name on hover over a highlight */
+.nina-highlight-span::after {
+  content: "NINA" !important;
+  position: absolute !important;
+  bottom: 100% !important;
+  left: 50% !important;
+  transform: translateX(-50%) translateY(-4px) scale(0.8) !important;
+  background: #1a1a1a !important;
+  color: #4dd9d9 !important;
+  border: 1px solid #4dd9d9 !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.15s ease, transform 0.15s ease !important;
+  box-shadow: 0 2px 4px rgba(77, 217, 217, 0.2) !important;
+  white-space: nowrap !important;
+  letter-spacing: 0.5px !important;
+  z-index: 999999 !important;
+}
+
+.nina-highlight-span:hover::after {
+  opacity: 1 !important;
+  transform: translateX(-50%) translateY(-2px) scale(1) !important;
+}
+
+/* Image Hover Save Button */
+#nina-image-highlighter {
+  position: absolute !important;
+  z-index: 2147483647 !important;
+  background: linear-gradient(135deg, #4dd9d9, #2ba8a8) !important;
+  color: #000000 !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 20px !important;
+  padding: 6px 12px !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 12px rgba(77, 217, 217, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(4px) scale(0.9) !important;
+  user-select: none !important;
+}
+
+#nina-image-highlighter.visible {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0) scale(1) !important;
+}
+
+#nina-image-highlighter:hover {
+  background: linear-gradient(135deg, #2ba8a8, #1a7f7f) !important;
+  box-shadow: 0 6px 16px rgba(77, 217, 217, 0.45), 0 3px 6px rgba(0, 0, 0, 0.25) !important;
+  transform: scale(1.04) !important;
+}
+
+#nina-image-highlighter svg {
+  width: 12px !important;
+  height: 12px !important;
+  fill: currentColor !important;
+  display: block !important;
+}
+
+/* Image Visual Save Flashing Confirmation */
+.nina-image-saved-effect {
+  outline: 4px solid #c5f135 !important;
+  outline-offset: -4px !important;
+  box-shadow: 0 0 24px rgba(197, 241, 53, 0.8) !important;
+  transition: outline 0.15s ease, box-shadow 0.15s ease !important;
+  animation: nina-image-glow-flash 1.2s ease-in-out forwards !important;
+}
+
+@keyframes nina-image-glow-flash {
+  0% {
+    filter: brightness(1.1);
+  }
+  50% {
+    filter: brightness(1.1);
+    box-shadow: 0 0 32px rgba(197, 241, 53, 1.0) !important;
+  }
+  100% {
+    outline-color: transparent !important;
+    box-shadow: none !important;
+    filter: none;
+  }
+}
+

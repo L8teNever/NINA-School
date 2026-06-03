@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "NINA School",
+  "version": "1.0.0",
+  "description": "Markiere Text auf Webseiten und speichere ihn mit Quellenangaben für deine Schularbeiten.",
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "contextMenus",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel/sidepanel.html"
+  },
+  "action": {
+    "default_title": "NINA School öffnen"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"]
+    }
+  ],
+  "icons": {
+    "128": "icons/icon1080-green.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["fullpage/fullpage.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

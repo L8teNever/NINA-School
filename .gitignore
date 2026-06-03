@@ -1,0 +1,33 @@
+# VS Code
+.vscode/
+*.code-workspace
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+.DS_Store?
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Node
+node_modules/
+package-lock.json
+
+# IDE
+*.sublime-project
+*.sublime-workspace
+.idea/
+*.iml
+
+# Project
+.claude/
+*.md~
