@@ -5,6 +5,12 @@ let projects = [];
 let activeProjectId = "proj_standard";
 let currentView = "sources";
 let selectedSourceUrl = "";
+let citationStyle = "de";
+let includeDate = true;
+
+function keyOf(h) {
+  return h.type === "idea" ? "__ideas__" : h.url;
+}
 
 const sourcesView = document.getElementById("sources-view");
 const detailsView = document.getElementById("details-view");
@@ -29,9 +35,14 @@ function init() {
   chrome.storage.local.get({
     highlights: [],
     projects: [],
-    activeProjectId: ""
+    activeProjectId: "",
+    settings: {}
   }, (result) => {
     let migrated = false;
+
+    const s = result.settings || {};
+    if (s.citationStyle) citationStyle = s.citationStyle;
+    if (s.includeDate !== undefined) includeDate = s.includeDate;
 
     let loadedProjects = result.projects || [];
     if (loadedProjects.length === 0) {
@@ -85,6 +96,10 @@ function init() {
         if (changes.highlights) highlights = changes.highlights.newValue || [];
         if (changes.projects) projects = changes.projects.newValue || [];
         if (changes.activeProjectId) activeProjectId = changes.activeProjectId.newValue || "proj_standard";
+        if (changes.settings && changes.settings.newValue) {
+          if (changes.settings.newValue.citationStyle) citationStyle = changes.settings.newValue.citationStyle;
+          if (changes.settings.newValue.includeDate !== undefined) includeDate = changes.settings.newValue.includeDate;
+        }
 
         renderProjectSelect();
         render();
@@ -161,18 +176,19 @@ function goBackToSources() {
 function getGroupedSources(filteredHighlights) {
   const groups = {};
   filteredHighlights.forEach(h => {
-    const url = h.url;
-    if (!groups[url]) {
-      groups[url] = {
-        url,
-        title: h.title || "Unbenannte Seite",
-        domain: getWebsiteName(url),
+    const key = keyOf(h);
+    const isIdea = h.type === "idea";
+    if (!groups[key]) {
+      groups[key] = {
+        url: key,
+        title: isIdea ? "Eigene Notizen" : (h.title || "Unbenannte Seite"),
+        domain: isIdea ? "Notizen" : getWebsiteName(h.url),
         count: 0,
         highlights: []
       };
     }
-    groups[url].count++;
-    groups[url].highlights.push(h);
+    groups[key].count++;
+    groups[key].highlights.push(h);
   });
 
   return Object.values(groups).sort((a, b) => {
@@ -212,7 +228,7 @@ function render() {
   } else {
     sourcesView.classList.remove("active");
     detailsView.classList.add("active");
-    const sourceHighlights = filtered.filter(h => h.url === selectedSourceUrl);
+    const sourceHighlights = filtered.filter(h => keyOf(h) === selectedSourceUrl);
 
     if (sourceHighlights.length === 0) {
       goBackToSources();
@@ -220,8 +236,9 @@ function render() {
     }
 
     const sample = sourceHighlights[0];
-    detailsDomain.textContent = getWebsiteName(selectedSourceUrl);
-    detailsTitle.textContent = sample.title || "Unbenannte Seite";
+    const isIdeaGroup = selectedSourceUrl === "__ideas__";
+    detailsDomain.textContent = isIdeaGroup ? "Notizen" : getWebsiteName(selectedSourceUrl);
+    detailsTitle.textContent = isIdeaGroup ? "Eigene Notizen" : (sample.title || "Unbenannte Seite");
 
     renderQuotesList(sourceHighlights);
   }
@@ -267,6 +284,9 @@ function renderQuotesList(sourceHighlights) {
     const card = document.createElement("div");
     card.className = "quote-card";
 
+    const isIdea = h.type === "idea";
+    const isLocal = h.url && h.url.startsWith("Lokal:");
+
     let cardContent = "";
     if (h.type === "image") {
       cardContent = `
@@ -285,31 +305,55 @@ function renderQuotesList(sourceHighlights) {
           </div>
         </div>`;
     } else {
-      cardContent = `<div class="quote-text">${escapeHtml(h.text)}</div>`;
+      cardContent = `<div class="quote-text">${escapeHtml(h.text || "(leere Notiz)")}</div>`;
     }
+
+    const jumpBtn = (!isIdea && !isLocal && h.type !== "image") ? `
+      <button class="quote-btn jump-btn" data-id="${h.id}" title="Quelle öffnen & zur Stelle springen">
+        <svg viewBox="0 0 24 24"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7z"/></svg>
+      </button>` : "";
+
+    const citeBtn = !isIdea ? `
+      <button class="quote-btn cite-btn" data-id="${h.id}" title="Kurzbeleg kopieren">
+        <svg viewBox="0 0 24 24"><path d="M6 17h3l2-4V7H5v6h3l-2 4zm8 0h3l2-4V7h-6v6h3l-2 4z"/></svg>
+      </button>` : "";
 
     card.innerHTML = `
       ${cardContent}
       <div class="quote-actions">
-        <button class="quote-btn copy-btn" data-id="${h.id}">
+        ${jumpBtn}
+        ${citeBtn}
+        <button class="quote-btn copy-btn" data-id="${h.id}" title="Kopieren">
           <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-          Kopieren
         </button>
-        <button class="quote-btn delete" data-id="${h.id}">
+        <button class="quote-btn delete" data-id="${h.id}" title="Löschen">
           <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-          Löschen
         </button>
       </div>
     `;
 
+    const jb = card.querySelector(".jump-btn");
+    if (jb) jb.addEventListener("click", () => {
+      const base = h.url.split("#")[0];
+      chrome.tabs.create({ url: `${base}#nina=${encodeURIComponent(h.id)}` });
+    });
+
+    const cb = card.querySelector(".cite-btn");
+    if (cb) cb.addEventListener("click", () => {
+      const text = NinaCite.formatInText(h, citationStyle);
+      navigator.clipboard.writeText(text).then(() => showToast("Beleg kopiert!"));
+    });
+
     card.querySelector(".copy-btn").addEventListener("click", () => {
       let copyText = "";
-      if (h.type === "image") {
-        copyText = `[Bildquelle] — Quelle: ${h.title}\nLink: ${h.url}\nBild-URL: ${h.imageUrl}`;
+      if (isIdea) {
+        copyText = h.text || "";
+      } else if (h.type === "image") {
+        copyText = `[Bildquelle]\n${NinaCite.formatReference(h, citationStyle, includeDate)}`;
       } else if (h.type === "file") {
         copyText = `[Lokale Datei] — Name: ${h.fileName} (${formatBytes(h.fileSize)})`;
       } else {
-        copyText = `„${h.text}"\n\nQuelle: ${h.title}\nLink: ${h.url}`;
+        copyText = `„${h.text}"\n\n${NinaCite.formatReference(h, citationStyle, includeDate)}`;
       }
       navigator.clipboard.writeText(copyText).then(() => showToast("Kopiert!"));
     });

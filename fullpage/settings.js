@@ -4,7 +4,8 @@ const DEFAULT_SETTINGS = {
   sortDescending: true,
   floatingButton: true,
   imageSave: true,
-  includeDate: true
+  includeDate: true,
+  citationStyle: "de"
 };
 
 let currentSettings = { ...DEFAULT_SETTINGS };
@@ -12,6 +13,7 @@ let currentSettings = { ...DEFAULT_SETTINGS };
 const floatingBtnToggle = document.getElementById("floating-btn");
 const imageSaveToggle = document.getElementById("image-save");
 const includeDateToggle = document.getElementById("include-date");
+const citationStyleSelect = document.getElementById("citation-style");
 const deleteAllBtn = document.getElementById("delete-all");
 const exportDataBtn = document.getElementById("export-data");
 const importDataBtn = document.getElementById("import-data");
@@ -25,6 +27,7 @@ function loadSettings() {
     floatingBtnToggle.checked = currentSettings.floatingButton;
     imageSaveToggle.checked = currentSettings.imageSave;
     includeDateToggle.checked = currentSettings.includeDate;
+    citationStyleSelect.value = currentSettings.citationStyle;
   });
 }
 
@@ -35,7 +38,8 @@ function saveSettings() {
     ...currentSettings,
     floatingButton: floatingBtnToggle.checked,
     imageSave: imageSaveToggle.checked,
-    includeDate: includeDateToggle.checked
+    includeDate: includeDateToggle.checked,
+    citationStyle: citationStyleSelect.value
   };
 
   chrome.storage.local.set({ settings: currentSettings }, () => {
@@ -46,6 +50,7 @@ function saveSettings() {
 floatingBtnToggle.addEventListener("change", saveSettings);
 imageSaveToggle.addEventListener("change", saveSettings);
 includeDateToggle.addEventListener("change", saveSettings);
+citationStyleSelect.addEventListener("change", saveSettings);
 
 backToApp.addEventListener("click", () => {
   window.location.href = "fullpage.html";

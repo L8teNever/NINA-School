@@ -43,7 +43,11 @@
         </button>
         <button id="copy-bib-btn" class="nav-btn">
           <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
-          Quellen kopieren
+          Quellenverzeichnis kopieren
+        </button>
+        <button id="outline-btn" class="nav-btn">
+          <svg viewBox="0 0 24 24"><path d="M3 9h14V7H3v2zm0 4h14v-2H3v2zm0 4h14v-2H3v2zm16 0h2v-2h-2v2zm0-10v2h2V7h-2zm0 6h2v-2h-2v2z"/></svg>
+          Gliederung exportieren
         </button>
       </nav>
 
@@ -65,13 +69,23 @@
           <span id="header-count" class="header-count"></span>
         </div>
         <div class="header-controls">
+          <button id="add-note-btn" class="ghost-btn" title="Eigene Notiz hinzufügen">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            Notiz
+          </button>
           <div class="search-wrapper">
             <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
             <input type="text" id="search-full" placeholder="Durchsuchen…">
           </div>
-          <button id="sort-btn-full" class="sort-btn" title="Sortierung umkehren">
-            <svg viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg>
-          </button>
+          <label class="scope-toggle" title="In allen Projekten suchen">
+            <input type="checkbox" id="global-search">
+            <span>Alle Projekte</span>
+          </label>
+          <select id="sort-select" class="sort-select" title="Sortierung">
+            <option value="newest">Neueste zuerst</option>
+            <option value="oldest">Älteste zuerst</option>
+            <option value="manual">Eigene Reihenfolge</option>
+          </select>
         </div>
       </header>
 
@@ -106,6 +120,7 @@
     </div>
   </div>
 
+  <script src="../lib/citations.js"></script>
   <script src="fullpage.js"></script>
 </body>
 </html>

@@ -8,6 +8,44 @@ chrome.storage.local.get({ settings: {} }, (r) => {
   ninaSettings = { floatingButton: true, imageSave: true, ...(r.settings || {}) };
 });
 
+// Read citation metadata (author / publish date / site name) from the page's meta tags.
+function getPageMeta() {
+  const pick = (selectors) => {
+    for (const sel of selectors) {
+      const el = document.querySelector(sel);
+      if (el) {
+        const val = el.getAttribute("content") || el.getAttribute("datetime") || el.textContent;
+        if (val && val.trim()) return val.trim();
+      }
+    }
+    return "";
+  };
+
+  const author = pick([
+    'meta[name="author"]',
+    'meta[property="article:author"]',
+    'meta[name="citation_author"]',
+    'meta[name="dc.creator"]',
+    'meta[property="book:author"]'
+  ]);
+
+  const publishedDate = pick([
+    'meta[property="article:published_time"]',
+    'meta[name="citation_publication_date"]',
+    'meta[name="date"]',
+    'meta[name="dc.date"]',
+    'meta[itemprop="datePublished"]',
+    'time[datetime]'
+  ]);
+
+  const siteName = pick([
+    'meta[property="og:site_name"]',
+    'meta[name="application-name"]'
+  ]);
+
+  return { author, publishedDate, siteName };
+}
+
 // Initialize floating highlighter button
 function initFloatingButton() {
   if (!document.body) {
@@ -189,6 +227,8 @@ function saveCurrentSelection() {
   const title = document.title || "Unbenannte Seite";
   const timestamp = Date.now();
 
+  const meta = getPageMeta();
+
   // Load the current active project before saving the highlight
   chrome.storage.local.get({ activeProjectId: "proj_standard", highlights: [] }, (result) => {
     const activeId = result.activeProjectId || "proj_standard";
@@ -203,7 +243,13 @@ function saveCurrentSelection() {
       projectId: activeId, // Associate with current active project!
       prefix,
       suffix,
-      note: ""
+      note: "",
+      category: "",
+      tags: [],
+      author: meta.author,
+      publishedDate: meta.publishedDate,
+      siteName: meta.siteName,
+      order: timestamp
     };
 
     const isDuplicate = highlights.some(h => h.text === text && (timestamp - h.timestamp) < 1000);
@@ -212,8 +258,8 @@ function saveCurrentSelection() {
     highlights.push(newHighlight);
     chrome.storage.local.set({ highlights }, () => {
       // Visually apply highlight locally
-      findAndHighlight(text, prefix, suffix, id);
-      
+      findAndHighlight(text, prefix, suffix, id, "");
+
       window.getSelection().removeAllRanges();
       hideFloatingButton();
     });
@@ -221,7 +267,7 @@ function saveCurrentSelection() {
 }
 
 // Find a text sequence on page and wrap it in a highlight span
-function findAndHighlight(searchText, prefix, suffix, id) {
+function findAndHighlight(searchText, prefix, suffix, id, category) {
   if (!searchText) return false;
   searchText = searchText.trim();
   if (searchText === "") return false;
@@ -345,6 +391,7 @@ function findAndHighlight(searchText, prefix, suffix, id) {
     const wrapper = document.createElement("span");
     wrapper.className = "nina-highlight-span";
     wrapper.setAttribute("data-nina-id", id);
+    if (category) wrapper.setAttribute("data-cat", category);
 
     if (startOffset === 0 && endOffset === textNode.nodeValue.length) {
       parent.replaceChild(wrapper, textNode);
@@ -406,13 +453,32 @@ function loadSavedHighlights() {
       if (h.projectId === activeId) {
         const cleanHUrl = h.url.split('#')[0].replace(/\/$/, "");
         const cleanCurrentUrl = currentUrl.split('#')[0].replace(/\/$/, "");
-        
+
         if (cleanHUrl === cleanCurrentUrl) {
-          findAndHighlight(h.text, h.prefix, h.suffix, h.id);
+          findAndHighlight(h.text, h.prefix, h.suffix, h.id, h.category || "");
         }
       }
     });
+
+    maybeScrollToHighlight();
   });
+}
+
+// Jump to a specific highlight when the page is opened via "Zur Stelle springen"
+// (URL contains #nina=<id>).
+let ninaJumped = false;
+function maybeScrollToHighlight() {
+  if (ninaJumped) return;
+  const m = window.location.hash.match(/nina=([^&]+)/);
+  if (!m) return;
+  const id = decodeURIComponent(m[1]);
+  const span = document.querySelector(`.nina-highlight-span[data-nina-id="${id}"]`);
+  if (span) {
+    ninaJumped = true;
+    span.scrollIntoView({ behavior: "smooth", block: "center" });
+    span.classList.add("nina-jump-flash");
+    setTimeout(() => span.classList.remove("nina-jump-flash"), 1800);
+  }
 }
 
 // Setup Event Listeners
@@ -448,10 +514,16 @@ chrome.storage.onChanged.addListener((changes, area) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "visualizeLastSelection" && message.highlight) {
     const h = message.highlight;
-    findAndHighlight(h.text, h.prefix, h.suffix, h.id);
+    findAndHighlight(h.text, h.prefix, h.suffix, h.id, h.category || "");
     sendResponse({ success: true });
   } else if (message.action === "flashImageSrc" && message.srcUrl) {
     flashImageElement(message.srcUrl);
+    sendResponse({ success: true });
+  } else if (message.action === "getPageMeta") {
+    sendResponse(getPageMeta());
+  } else if (message.action === "saveSelectionCommand") {
+    // Triggered by the keyboard shortcut
+    saveCurrentSelection();
     sendResponse({ success: true });
   }
   return true;

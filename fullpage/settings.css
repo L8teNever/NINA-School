@@ -134,6 +134,20 @@ button { font-family: inherit; }
 .toggle input:checked + .toggle-slider { background: var(--cyan); border-color: var(--cyan); }
 .toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: #06201f; }
 
+.select-input {
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+  padding: 9px 12px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.select-input:hover,
+.select-input:focus { outline: none; border-color: var(--cyan); }
+
 /* ===== BUTTONS ===== */
 .btn {
   padding: 10px 18px;

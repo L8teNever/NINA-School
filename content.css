@@ -97,6 +97,34 @@
   transform: translateX(-50%) translateY(-2px) scale(1) !important;
 }
 
+/* Highlight categories (colour-coded) */
+.nina-highlight-span[data-cat="definition"] {
+  background-color: rgba(126, 160, 255, 0.28) !important;
+  border-bottom-color: rgba(126, 160, 255, 0.95) !important;
+}
+.nina-highlight-span[data-cat="pro"] {
+  background-color: rgba(80, 220, 120, 0.28) !important;
+  border-bottom-color: rgba(80, 220, 120, 0.95) !important;
+}
+.nina-highlight-span[data-cat="contra"] {
+  background-color: rgba(255, 120, 90, 0.28) !important;
+  border-bottom-color: rgba(255, 120, 90, 0.95) !important;
+}
+.nina-highlight-span[data-cat="important"] {
+  background-color: rgba(255, 210, 60, 0.30) !important;
+  border-bottom-color: rgba(255, 210, 60, 1) !important;
+}
+
+/* Flash when jumping to a highlight ("Zur Stelle springen") */
+.nina-jump-flash {
+  animation: nina-jump-flash 1.8s ease-out !important;
+  border-radius: 3px !important;
+}
+@keyframes nina-jump-flash {
+  0%, 45% { box-shadow: 0 0 0 3px rgba(197, 241, 53, 0.9), 0 0 18px rgba(197, 241, 53, 0.7) !important; }
+  100% { box-shadow: none !important; }
+}
+
 /* Image Hover Save Button */
 #nina-image-highlighter {
   position: absolute !important;

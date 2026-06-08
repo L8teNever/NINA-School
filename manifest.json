@@ -21,6 +21,15 @@
   "action": {
     "default_title": "NINA School öffnen"
   },
+  "commands": {
+    "save-selection": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+S",
+        "mac": "Command+Shift+S"
+      },
+      "description": "Markierten Text zu NINA speichern"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
