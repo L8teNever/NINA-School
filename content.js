@@ -2,6 +2,12 @@
 
 let floatingButton = null;
 
+// User preferences (toggled from the settings page). Defaults = everything on.
+let ninaSettings = { floatingButton: true, imageSave: true };
+chrome.storage.local.get({ settings: {} }, (r) => {
+  ninaSettings = { floatingButton: true, imageSave: true, ...(r.settings || {}) };
+});
+
 // Initialize floating highlighter button
 function initFloatingButton() {
   if (!document.body) {
@@ -110,8 +116,13 @@ function getSelectionData() {
 // Position and show the floating helper button
 function handleSelectionChange(e) {
   setTimeout(() => {
+    if (!ninaSettings.floatingButton) {
+      hideFloatingButton();
+      return;
+    }
+
     const selection = window.getSelection();
-    
+
     if (!selection || selection.isCollapsed || selection.toString().trim() === "") {
       hideFloatingButton();
       return;
@@ -425,6 +436,11 @@ chrome.storage.onChanged.addListener((changes, area) => {
     if (changes.highlights || changes.activeProjectId) {
       loadSavedHighlights();
     }
+    if (changes.settings && changes.settings.newValue) {
+      ninaSettings = { floatingButton: true, imageSave: true, ...changes.settings.newValue };
+      if (!ninaSettings.floatingButton) hideFloatingButton();
+      if (!ninaSettings.imageSave && typeof hideImageSaveButton === "function") hideImageSaveButton();
+    }
   }
 });
 
@@ -447,6 +463,7 @@ let imageSaveButton = null;
 let imageButtonTimer = null;
 
 function handleImageMouseOver(e) {
+  if (!ninaSettings.imageSave) return;
   const el = e.target;
   if (el.tagName === "IMG") {
     // Ignore small icons/decorations

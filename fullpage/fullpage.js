@@ -4,12 +4,15 @@ let highlights = [];
 let projects = [];
 let activeProjectId = "proj_standard";
 let sortDescending = true;
+let includeDate = true;
 let searchQuery = "";
 let isInternalUpdate = false;
 let currentPage = 1;
 const itemsPerPage = 10;
 
 const projectSelect = document.getElementById("project-select-full");
+const openSettingsBtnFull = document.getElementById("open-settings-btn-full");
+const headerCount = document.getElementById("header-count");
 const addProjectBtn = document.getElementById("add-project-btn-full");
 const deleteProjectBtn = document.getElementById("delete-project-btn-full");
 const highlightsContainer = document.getElementById("highlights-container");
@@ -33,7 +36,7 @@ function init() {
     highlights: [],
     projects: [],
     activeProjectId: "",
-    settings: { sortDescending: true }
+    settings: { sortDescending: true, includeDate: true }
   }, (result) => {
     let migrated = false;
 
@@ -60,8 +63,9 @@ function init() {
     });
     highlights = loadedHighlights;
 
-    if (result.settings && result.settings.sortDescending !== undefined) {
-      sortDescending = result.settings.sortDescending;
+    if (result.settings) {
+      if (result.settings.sortDescending !== undefined) sortDescending = result.settings.sortDescending;
+      if (result.settings.includeDate !== undefined) includeDate = result.settings.includeDate;
     }
 
     if (migrated) {
@@ -81,6 +85,9 @@ function init() {
     sortBtn.addEventListener("click", toggleSort);
     exportBtn.addEventListener("click", exportMarkdown);
     copyBibBtn.addEventListener("click", copyBibliography);
+    openSettingsBtnFull.addEventListener("click", () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL("fullpage/settings.html") });
+    });
     prevPageBtn.addEventListener("click", () => goToPreviousPage());
     nextPageBtn.addEventListener("click", () => goToNextPage());
 
@@ -89,6 +96,11 @@ function init() {
         if (changes.highlights && !isInternalUpdate) highlights = changes.highlights.newValue || [];
         if (changes.projects) projects = changes.projects.newValue || [];
         if (changes.activeProjectId) activeProjectId = changes.activeProjectId.newValue || "proj_standard";
+        if (changes.settings && changes.settings.newValue) {
+          const s = changes.settings.newValue;
+          if (s.sortDescending !== undefined) sortDescending = s.sortDescending;
+          if (s.includeDate !== undefined) includeDate = s.includeDate;
+        }
 
         renderProjectsDropdown();
         render();
@@ -200,9 +212,10 @@ function goToNextPage() {
 
 function toggleSort() {
   sortDescending = !sortDescending;
-  const settings = { sortDescending };
-  chrome.storage.local.set({ settings }, () => {
-    render();
+  // Merge into existing settings so we don't clobber other keys (includeDate, floatingButton, ...)
+  chrome.storage.local.get({ settings: {} }, (result) => {
+    const settings = { ...result.settings, sortDescending };
+    chrome.storage.local.set({ settings }, () => render());
   });
 }
 
@@ -220,6 +233,16 @@ function render() {
   filtered.sort((a, b) => {
     return sortDescending ? b.timestamp - a.timestamp : a.timestamp - b.timestamp;
   });
+
+  // Header counter
+  if (headerCount) {
+    const totalInProject = highlights.filter(h => h.projectId === activeProjectId).length;
+    if (searchQuery) {
+      headerCount.textContent = `${filtered.length} von ${totalInProject}`;
+    } else {
+      headerCount.textContent = totalInProject === 1 ? "1 Eintrag" : `${totalInProject} Einträge`;
+    }
+  }
 
   if (filtered.length === 0) {
     highlightsContainer.style.display = "none";
@@ -274,7 +297,7 @@ function render() {
         </div>
       `;
     } else {
-      cardContent = `<div class="card-text">„${escapeHtml(h.text)}"</div>`;
+      cardContent = `<div class="card-text">${escapeHtml(h.text)}</div>`;
     }
 
     const isLocalFile = h.url && h.url.startsWith("Lokal:");
@@ -413,7 +436,9 @@ function exportMarkdown() {
       mdContent += `> „${h.text}"\n\n`;
     }
     mdContent += `* **Quelle:** [${h.title || "Link"}](${h.url})\n`;
-    mdContent += `* **Datum:** ${formatDate(h.timestamp)}\n`;
+    if (includeDate) {
+      mdContent += `* **Datum:** ${formatDate(h.timestamp)}\n`;
+    }
     if (h.note) {
       mdContent += `* **Notiz:** ${h.note}\n`;
     }
@@ -452,12 +477,13 @@ function copyBibliography() {
 
   let bibText = `NINA School - Quellensammlung: ${projectName}\n\n`;
   sorted.forEach(h => {
+    const dateSuffix = includeDate ? ` — Gesichert am: ${formatDate(h.timestamp)}` : "";
     if (h.type === "image") {
-      bibText += `- [Bild] aus: ${h.title} (${h.url}) — Gesichert am: ${formatDate(h.timestamp)}\n`;
+      bibText += `- [Bild] aus: ${h.title} (${h.url})${dateSuffix}\n`;
     } else if (h.type === "file") {
-      bibText += `- [Datei] ${h.fileName} (${formatBytes(h.fileSize)}) — Gesichert am: ${formatDate(h.timestamp)}\n`;
+      bibText += `- [Datei] ${h.fileName} (${formatBytes(h.fileSize)})${dateSuffix}\n`;
     } else {
-      bibText += `- „${h.text}" — aus: ${h.title} (${h.url}) — Gesichert am: ${formatDate(h.timestamp)}\n`;
+      bibText += `- „${h.text}" — aus: ${h.title} (${h.url})${dateSuffix}\n`;
     }
     if (h.note) {
       bibText += `  Notiz: ${h.note}\n`;

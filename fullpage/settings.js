@@ -1,61 +1,61 @@
 // NINA School - Settings Script
 
-const darkModeToggle = document.getElementById("dark-mode");
+const DEFAULT_SETTINGS = {
+  sortDescending: true,
+  floatingButton: true,
+  imageSave: true,
+  includeDate: true
+};
+
+let currentSettings = { ...DEFAULT_SETTINGS };
+
 const floatingBtnToggle = document.getElementById("floating-btn");
-const autoSaveToggle = document.getElementById("auto-save");
-const exportFormatSelect = document.getElementById("export-format");
+const imageSaveToggle = document.getElementById("image-save");
 const includeDateToggle = document.getElementById("include-date");
 const deleteAllBtn = document.getElementById("delete-all");
 const exportDataBtn = document.getElementById("export-data");
 const importDataBtn = document.getElementById("import-data");
 const importFile = document.getElementById("import-file");
+const backToApp = document.getElementById("back-to-app");
 
 function loadSettings() {
-  chrome.storage.local.get({
-    settings: {
-      darkMode: true,
-      floatingButton: true,
-      autoSave: false,
-      exportFormat: "markdown",
-      includeDate: true
-    }
-  }, (result) => {
-    const settings = result.settings;
+  chrome.storage.local.get({ settings: {} }, (result) => {
+    currentSettings = { ...DEFAULT_SETTINGS, ...(result.settings || {}) };
 
-    darkModeToggle.checked = settings.darkMode;
-    floatingBtnToggle.checked = settings.floatingButton;
-    autoSaveToggle.checked = settings.autoSave;
-    exportFormatSelect.value = settings.exportFormat;
-    includeDateToggle.checked = settings.includeDate;
+    floatingBtnToggle.checked = currentSettings.floatingButton;
+    imageSaveToggle.checked = currentSettings.imageSave;
+    includeDateToggle.checked = currentSettings.includeDate;
   });
 }
 
 function saveSettings() {
-  const settings = {
-    darkMode: darkModeToggle.checked,
+  // Merge UI values into the existing settings object so we never clobber
+  // keys owned by other pages (e.g. sortDescending from the full view).
+  currentSettings = {
+    ...currentSettings,
     floatingButton: floatingBtnToggle.checked,
-    autoSave: autoSaveToggle.checked,
-    exportFormat: exportFormatSelect.value,
+    imageSave: imageSaveToggle.checked,
     includeDate: includeDateToggle.checked
   };
 
-  chrome.storage.local.set({ settings }, () => {
-    showToast("Einstellungen gespeichert");
+  chrome.storage.local.set({ settings: currentSettings }, () => {
+    showToast("Gespeichert");
   });
 }
 
-darkModeToggle.addEventListener("change", saveSettings);
 floatingBtnToggle.addEventListener("change", saveSettings);
-autoSaveToggle.addEventListener("change", saveSettings);
-exportFormatSelect.addEventListener("change", saveSettings);
+imageSaveToggle.addEventListener("change", saveSettings);
 includeDateToggle.addEventListener("change", saveSettings);
 
-deleteAllBtn.addEventListener("click", () => {
-  const confirm = window.confirm(
-    "Möchtest du wirklich alle Daten löschen? Diese Aktion kann nicht rückgängig gemacht werden!"
-  );
+backToApp.addEventListener("click", () => {
+  window.location.href = "fullpage.html";
+});
 
-  if (confirm) {
+deleteAllBtn.addEventListener("click", () => {
+  const ok = window.confirm(
+    "Möchtest du wirklich ALLE Daten löschen? Diese Aktion kann nicht rückgängig gemacht werden!"
+  );
+  if (ok) {
     chrome.storage.local.set({
       highlights: [],
       projects: [{ id: "proj_standard", name: "Standard-Projekt" }],
@@ -78,14 +78,11 @@ exportDataBtn.addEventListener("click", () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
     showToast("✓ Daten exportiert");
   });
 });
 
-importDataBtn.addEventListener("click", () => {
-  importFile.click();
-});
+importDataBtn.addEventListener("click", () => importFile.click());
 
 importFile.addEventListener("change", (e) => {
   const file = e.target.files[0];
@@ -95,25 +92,20 @@ importFile.addEventListener("change", (e) => {
   reader.onload = (event) => {
     try {
       const data = JSON.parse(event.target.result);
-
-      const confirm = window.confirm(
+      const ok = window.confirm(
         "Möchtest du diese Daten wirklich importieren? Bestehende Daten werden überschrieben."
       );
-
-      if (confirm) {
+      if (ok) {
         chrome.storage.local.set(data, () => {
           showToast("✓ Daten importiert");
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
+          setTimeout(() => window.location.reload(), 1200);
         });
       }
     } catch (error) {
-      showToast("✗ Fehler beim Importieren der Datei");
+      showToast("✗ Datei konnte nicht gelesen werden");
       console.error(error);
     }
   };
-
   reader.readAsText(file);
   importFile.value = "";
 });
@@ -125,34 +117,15 @@ function showToast(message) {
   const toast = document.createElement("div");
   toast.className = "toast-msg";
   toast.textContent = message;
-  toast.style.cssText = `
-    position: fixed;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: #262626;
-    color: #4dd9d9;
-    border: 1px solid #4dd9d9;
-    padding: 12px 20px;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    z-index: 10000;
-    opacity: 0;
-    transition: all 0.25s;
-    pointer-events: none;
-  `;
-
   document.body.appendChild(toast);
+
   toast.offsetHeight;
-  toast.style.opacity = "1";
-  toast.style.transform = "translateX(-50%) translateY(0)";
+  toast.classList.add("show");
 
   setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform = "translateX(-50%) translateY(20px)";
-    setTimeout(() => toast.remove(), 250);
-  }, 2200);
+    toast.classList.remove("show");
+    toast.addEventListener("transitionend", () => toast.remove());
+  }, 2000);
 }
 
 document.addEventListener("DOMContentLoaded", loadSettings);

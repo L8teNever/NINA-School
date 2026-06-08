@@ -6,7 +6,7 @@
   <title>NINA School</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="sidepanel.css">
 </head>
 <body>
@@ -21,18 +21,29 @@
           </svg>
           <span class="logo-text">NINA</span>
         </div>
-        <button id="open-fullpage-btn" class="fullpage-btn" title="Vollansicht öffnen">
-          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
-        </button>
+        <div class="header-actions">
+          <button id="open-settings-btn" class="icon-btn" title="Einstellungen">
+            <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.64l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.09-.47 0-.59.22L2.74 8.87c-.12.22-.07.49.12.64l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.64l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.64l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          </button>
+          <button id="open-fullpage-btn" class="icon-btn" title="Vollansicht öffnen">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/></svg>
+          </button>
+        </div>
       </div>
 
-      <div class="project-badge-wrapper">
-        <span class="project-badge-label">Projekt:</span>
-        <span id="project-badge" class="project-badge">Standard</span>
+      <!-- Project switcher -->
+      <div class="project-switcher">
+        <label class="field-label" for="project-select">Aktives Projekt</label>
+        <div class="project-row">
+          <select id="project-select" class="project-select"></select>
+          <button id="new-project-btn" class="icon-btn outline" title="Neues Projekt">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          </button>
+        </div>
       </div>
     </header>
 
-    <!-- Sidebar File / Image Upload Bar -->
+    <!-- File / Image Upload Bar -->
     <div class="sidebar-action-bar">
       <button id="upload-file-btn" class="upload-btn">
         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -55,6 +66,7 @@
         <div class="details-header">
           <button id="back-btn" class="back-btn">
             <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+            <span>Zurück</span>
           </button>
           <div class="details-info">
             <span id="details-domain" class="details-domain">Domain</span>
@@ -69,9 +81,22 @@
         <svg viewBox="0 0 24 24">
           <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm0 8H7v-2h10v2z"/>
         </svg>
-        <p>Noch keine Zitate</p>
+        <p class="empty-title">Noch keine Quellen</p>
+        <p class="empty-hint">Markiere Text auf einer Webseite und klick auf „Zu NINA" — oder lade oben eine Datei hoch.</p>
       </div>
     </main>
+  </div>
+
+  <!-- New Project Modal -->
+  <div id="project-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>Neues Projekt</h2>
+      <input type="text" id="project-name-input" placeholder="Projektname" maxlength="60">
+      <div class="modal-actions">
+        <button id="modal-cancel" class="btn secondary">Abbrechen</button>
+        <button id="modal-save" class="btn primary">Erstellen</button>
+      </div>
+    </div>
   </div>
 
   <script src="sidepanel.js"></script>
