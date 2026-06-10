@@ -68,34 +68,163 @@
   border-bottom-color: rgba(197, 241, 53, 1) !important;
 }
 
-/* Tooltip tag showing brand name on hover over a highlight */
-.nina-highlight-span::after {
-  content: "NINA" !important;
+/* Highlights with a note get a dotted marker so you know there's more info */
+.nina-highlight-span.has-note {
+  border-bottom-style: dotted !important;
+  border-bottom-width: 2px !important;
+}
+.nina-highlight-span.has-note::after {
+  content: "" !important;
   position: absolute !important;
-  bottom: 100% !important;
-  left: 50% !important;
-  transform: translateX(-50%) translateY(-4px) scale(0.8) !important;
-  background: #1a1a1a !important;
-  color: #4dd9d9 !important;
-  border: 1px solid #4dd9d9 !important;
-  font-family: system-ui, -apple-system, sans-serif !important;
-  font-size: 8px !important;
-  font-weight: 700 !important;
-  padding: 2px 6px !important;
-  border-radius: 4px !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-  transition: opacity 0.15s ease, transform 0.15s ease !important;
-  box-shadow: 0 2px 4px rgba(77, 217, 217, 0.2) !important;
-  white-space: nowrap !important;
-  letter-spacing: 0.5px !important;
-  z-index: 999999 !important;
+  top: -3px !important;
+  right: -3px !important;
+  width: 6px !important;
+  height: 6px !important;
+  border-radius: 50% !important;
+  background: #c5f135 !important;
+  box-shadow: 0 0 0 1px #1a1a1a !important;
 }
 
-.nina-highlight-span:hover::after {
-  opacity: 1 !important;
-  transform: translateX(-50%) translateY(-2px) scale(1) !important;
+/* Hover-note popover */
+#nina-note-pop {
+  position: absolute !important;
+  z-index: 2147483647 !important;
+  display: none;
+  max-width: 320px !important;
+  min-width: 180px !important;
+  background: #1a1a1a !important;
+  color: #e8e8e8 !important;
+  border: 1px solid #36363c !important;
+  border-radius: 10px !important;
+  padding: 10px !important;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
 }
+#nina-note-pop .nina-note-body {
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  margin-bottom: 8px !important;
+  max-height: 180px !important;
+  overflow-y: auto !important;
+}
+#nina-note-pop .nina-note-empty { color: #6b6b73 !important; font-style: italic !important; }
+#nina-note-pop .nina-note-edit {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  background: transparent !important;
+  border: 1px solid #36363c !important;
+  color: #4dd9d9 !important;
+  border-radius: 7px !important;
+  padding: 5px 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+}
+#nina-note-pop .nina-note-edit:hover { border-color: #4dd9d9 !important; background: rgba(77,217,217,0.1) !important; }
+#nina-note-pop .nina-note-area {
+  width: 280px !important;
+  max-width: 70vw !important;
+  min-height: 70px !important;
+  background: #0e0e0f !important;
+  color: #f2f2f3 !important;
+  border: 1px solid #36363c !important;
+  border-radius: 8px !important;
+  padding: 8px !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  resize: vertical !important;
+  box-sizing: border-box !important;
+}
+#nina-note-pop .nina-note-area:focus { outline: none !important; border-color: #4dd9d9 !important; }
+#nina-note-pop .nina-note-actions { display: flex !important; justify-content: flex-end !important; gap: 8px !important; margin-top: 8px !important; }
+#nina-note-pop .nina-note-actions button {
+  border: none !important;
+  border-radius: 7px !important;
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+}
+#nina-note-pop .nina-note-cancel { background: transparent !important; border: 1px solid #36363c !important; color: #a2a2aa !important; }
+#nina-note-pop .nina-note-save { background: #4dd9d9 !important; color: #06201f !important; }
+
+/* Page-note widget (bottom-left) */
+#nina-page-note {
+  position: fixed !important;
+  left: 16px !important;
+  bottom: 16px !important;
+  z-index: 2147483646 !important;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+#nina-page-note .npn-tab {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  max-width: 280px !important;
+  background: #1a1a1a !important;
+  color: #a2a2aa !important;
+  border: 1px solid #36363c !important;
+  border-radius: 999px !important;
+  padding: 8px 14px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35) !important;
+  font-family: inherit !important;
+}
+#nina-page-note .npn-tab:hover { border-color: #4dd9d9 !important; color: #4dd9d9 !important; }
+#nina-page-note .npn-tab svg { width: 16px !important; height: 16px !important; fill: currentColor !important; flex-shrink: 0 !important; }
+#nina-page-note .npn-preview { white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+#nina-page-note[data-has="1"] .npn-tab { color: #c5f135 !important; border-color: rgba(197,241,53,0.5) !important; }
+
+#nina-page-note .npn-panel {
+  position: absolute !important;
+  left: 0 !important;
+  bottom: calc(100% + 8px) !important;
+  width: 300px !important;
+  max-width: 80vw !important;
+  background: #1a1a1a !important;
+  border: 1px solid #36363c !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5) !important;
+}
+#nina-page-note .npn-panel[hidden] { display: none !important; }
+#nina-page-note .npn-head { font-size: 11px !important; text-transform: uppercase !important; letter-spacing: 0.5px !important; color: #6b6b73 !important; font-weight: 700 !important; margin-bottom: 8px !important; }
+#nina-page-note .npn-area {
+  width: 100% !important;
+  min-height: 90px !important;
+  background: #0e0e0f !important;
+  color: #f2f2f3 !important;
+  border: 1px solid #36363c !important;
+  border-radius: 8px !important;
+  padding: 9px !important;
+  font-family: inherit !important;
+  font-size: 13px !important;
+  resize: vertical !important;
+  box-sizing: border-box !important;
+}
+#nina-page-note .npn-area:focus { outline: none !important; border-color: #4dd9d9 !important; }
+#nina-page-note .npn-actions { display: flex !important; align-items: center !important; gap: 8px !important; margin-top: 10px !important; }
+#nina-page-note .npn-spacer { flex: 1 !important; }
+#nina-page-note .npn-actions button {
+  border: none !important;
+  border-radius: 7px !important;
+  padding: 7px 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+}
+#nina-page-note .npn-delete { background: transparent !important; border: 1px solid #36363c !important; color: #ff6b6b !important; }
+#nina-page-note .npn-delete[disabled] { opacity: 0.4 !important; cursor: not-allowed !important; }
+#nina-page-note .npn-close { background: transparent !important; border: 1px solid #36363c !important; color: #a2a2aa !important; }
+#nina-page-note .npn-save { background: #4dd9d9 !important; color: #06201f !important; }
 
 /* Highlight categories (colour-coded) */
 .nina-highlight-span[data-cat="definition"] {
@@ -123,6 +252,32 @@
 @keyframes nina-jump-flash {
   0%, 45% { box-shadow: 0 0 0 3px rgba(197, 241, 53, 0.9), 0 0 18px rgba(197, 241, 53, 0.7) !important; }
   100% { box-shadow: none !important; }
+}
+
+/* In-page toast (duplicate warnings etc.) */
+#nina-toast {
+  position: fixed !important;
+  bottom: 24px !important;
+  left: 50% !important;
+  transform: translateX(-50%) translateY(20px) !important;
+  z-index: 2147483647 !important;
+  background: #1a1a1a !important;
+  color: #4dd9d9 !important;
+  border: 1px solid #4dd9d9 !important;
+  border-radius: 10px !important;
+  padding: 11px 18px !important;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.22s ease, transform 0.22s ease !important;
+  max-width: 80vw !important;
+}
+#nina-toast.visible {
+  opacity: 1 !important;
+  transform: translateX(-50%) translateY(0) !important;
 }
 
 /* Image Hover Save Button */

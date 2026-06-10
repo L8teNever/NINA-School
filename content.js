@@ -3,9 +3,11 @@
 let floatingButton = null;
 
 // User preferences (toggled from the settings page). Defaults = everything on.
-let ninaSettings = { floatingButton: true, imageSave: true };
+const NINA_DEFAULTS = { floatingButton: true, imageSave: true, hoverNotes: true, pageNotes: true };
+let ninaSettings = { ...NINA_DEFAULTS };
 chrome.storage.local.get({ settings: {} }, (r) => {
-  ninaSettings = { floatingButton: true, imageSave: true, ...(r.settings || {}) };
+  ninaSettings = { ...NINA_DEFAULTS, ...(r.settings || {}) };
+  renderPageNoteWidget();
 });
 
 // Read citation metadata (author / publish date / site name) from the page's meta tags.
@@ -249,11 +251,22 @@ function saveCurrentSelection() {
       author: meta.author,
       publishedDate: meta.publishedDate,
       siteName: meta.siteName,
-      order: timestamp
+      order: timestamp,
+      quoteType: "direct",
+      page: "",
+      sourceType: "website"
     };
 
-    const isDuplicate = highlights.some(h => h.text === text && (timestamp - h.timestamp) < 1000);
-    if (isDuplicate) return;
+    // Warn on duplicates within the active project (same text + same page).
+    const isDuplicate = highlights.some(h =>
+      h.projectId === activeId && h.text === text && h.url === url
+    );
+    if (isDuplicate) {
+      ninaToast("Dieses Zitat ist in diesem Projekt schon gespeichert");
+      window.getSelection().removeAllRanges();
+      hideFloatingButton();
+      return;
+    }
 
     highlights.push(newHighlight);
     chrome.storage.local.set({ highlights }, () => {
@@ -267,7 +280,7 @@ function saveCurrentSelection() {
 }
 
 // Find a text sequence on page and wrap it in a highlight span
-function findAndHighlight(searchText, prefix, suffix, id, category) {
+function findAndHighlight(searchText, prefix, suffix, id, category, note) {
   if (!searchText) return false;
   searchText = searchText.trim();
   if (searchText === "") return false;
@@ -392,6 +405,7 @@ function findAndHighlight(searchText, prefix, suffix, id, category) {
     wrapper.className = "nina-highlight-span";
     wrapper.setAttribute("data-nina-id", id);
     if (category) wrapper.setAttribute("data-cat", category);
+    if (note) { wrapper.setAttribute("data-nina-note", note); wrapper.classList.add("has-note"); }
 
     if (startOffset === 0 && endOffset === textNode.nodeValue.length) {
       parent.replaceChild(wrapper, textNode);
@@ -455,7 +469,7 @@ function loadSavedHighlights() {
         const cleanCurrentUrl = currentUrl.split('#')[0].replace(/\/$/, "");
 
         if (cleanHUrl === cleanCurrentUrl) {
-          findAndHighlight(h.text, h.prefix, h.suffix, h.id, h.category || "");
+          findAndHighlight(h.text, h.prefix, h.suffix, h.id, h.category || "", h.note || "");
         }
       }
     });
@@ -501,11 +515,13 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "local") {
     if (changes.highlights || changes.activeProjectId) {
       loadSavedHighlights();
+      renderPageNoteWidget();
     }
     if (changes.settings && changes.settings.newValue) {
-      ninaSettings = { floatingButton: true, imageSave: true, ...changes.settings.newValue };
+      ninaSettings = { ...NINA_DEFAULTS, ...changes.settings.newValue };
       if (!ninaSettings.floatingButton) hideFloatingButton();
       if (!ninaSettings.imageSave && typeof hideImageSaveButton === "function") hideImageSaveButton();
+      renderPageNoteWidget();
     }
   }
 });
@@ -514,7 +530,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "visualizeLastSelection" && message.highlight) {
     const h = message.highlight;
-    findAndHighlight(h.text, h.prefix, h.suffix, h.id, h.category || "");
+    findAndHighlight(h.text, h.prefix, h.suffix, h.id, h.category || "", h.note || "");
     sendResponse({ success: true });
   } else if (message.action === "flashImageSrc" && message.srcUrl) {
     flashImageElement(message.srcUrl);
@@ -525,9 +541,215 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     // Triggered by the keyboard shortcut
     saveCurrentSelection();
     sendResponse({ success: true });
+  } else if (message.action === "ninaToast" && message.message) {
+    ninaToast(message.message);
+    sendResponse({ success: true });
   }
   return true;
 });
+
+// Small in-page toast (duplicate warnings, "Seite gemerkt", etc.)
+let ninaToastTimer = null;
+function ninaToast(text) {
+  let el = document.getElementById("nina-toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "nina-toast";
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
+  el.classList.add("visible");
+  if (ninaToastTimer) clearTimeout(ninaToastTimer);
+  ninaToastTimer = setTimeout(() => el.classList.remove("visible"), 2600);
+}
+
+function ninaEscape(str) {
+  if (!str) return "";
+  return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function ninaCleanUrl(u) {
+  return (u || "").split("#")[0].replace(/\/$/, "");
+}
+
+/* ===================== HOVER NOTES (per highlight) ===================== */
+let noteTip = null;
+let noteTipSpanId = null;
+let noteHideTimer = null;
+let noteEditing = false;
+
+function ensureNoteTip() {
+  if (noteTip) return noteTip;
+  noteTip = document.createElement("div");
+  noteTip.id = "nina-note-pop";
+  noteTip.addEventListener("mouseenter", () => { if (noteHideTimer) clearTimeout(noteHideTimer); });
+  noteTip.addEventListener("mouseleave", () => scheduleHideNote());
+  document.body.appendChild(noteTip);
+  return noteTip;
+}
+
+function positionNoteTip(span) {
+  const r = span.getBoundingClientRect();
+  const h = noteTip.offsetHeight;
+  let top = r.top + window.scrollY - h - 8;
+  if (top < window.scrollY + 4) top = r.bottom + window.scrollY + 8; // flip below
+  let left = r.left + window.scrollX;
+  const maxLeft = window.scrollX + document.documentElement.clientWidth - noteTip.offsetWidth - 8;
+  if (left > maxLeft) left = Math.max(window.scrollX + 8, maxLeft);
+  noteTip.style.top = top + "px";
+  noteTip.style.left = left + "px";
+}
+
+function showNoteView(span) {
+  const id = span.getAttribute("data-nina-id");
+  const note = span.getAttribute("data-nina-note") || "";
+  if (!noteEditing && noteTipSpanId === id && noteTip && noteTip.style.display === "block") return;
+  noteTipSpanId = id;
+  noteEditing = false;
+  ensureNoteTip();
+  noteTip.className = "";
+  noteTip.innerHTML = `
+    <div class="nina-note-body">${note ? ninaEscape(note) : '<span class="nina-note-empty">Keine Notiz – klick zum Hinzufügen</span>'}</div>
+    <button class="nina-note-edit">${note ? "✎ Bearbeiten" : "＋ Notiz hinzufügen"}</button>`;
+  noteTip.querySelector(".nina-note-edit").addEventListener("click", () => showNoteEdit(span, note));
+  noteTip.style.display = "block";
+  positionNoteTip(span);
+}
+
+function showNoteEdit(span, note) {
+  noteEditing = true;
+  ensureNoteTip();
+  noteTip.className = "editing";
+  noteTip.innerHTML = `
+    <textarea class="nina-note-area" placeholder="Notiz / Beschreibung zu dieser Markierung…">${ninaEscape(note)}</textarea>
+    <div class="nina-note-actions">
+      <button class="nina-note-cancel">Abbrechen</button>
+      <button class="nina-note-save">Speichern</button>
+    </div>`;
+  const ta = noteTip.querySelector(".nina-note-area");
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+  noteTip.querySelector(".nina-note-cancel").addEventListener("click", () => { noteEditing = false; hideNote(); });
+  noteTip.querySelector(".nina-note-save").addEventListener("click", () => saveHighlightNote(noteTipSpanId, ta.value));
+  positionNoteTip(span);
+}
+
+function saveHighlightNote(id, value) {
+  chrome.storage.local.get({ highlights: [] }, (res) => {
+    const hs = res.highlights || [];
+    const i = hs.findIndex(x => x.id === id);
+    if (i !== -1) {
+      hs[i].note = value.trim();
+      chrome.storage.local.set({ highlights: hs }, () => {
+        noteEditing = false;
+        hideNote();
+        ninaToast("Notiz gespeichert");
+      });
+    } else {
+      noteEditing = false;
+      hideNote();
+    }
+  });
+}
+
+function scheduleHideNote() {
+  if (noteHideTimer) clearTimeout(noteHideTimer);
+  noteHideTimer = setTimeout(() => { if (!noteEditing) hideNote(); }, 350);
+}
+function hideNote() {
+  if (noteTip) noteTip.style.display = "none";
+  noteTipSpanId = null;
+}
+
+document.addEventListener("mouseover", (e) => {
+  if (!ninaSettings.hoverNotes) return;
+  const span = e.target.closest && e.target.closest(".nina-highlight-span");
+  if (span) {
+    if (noteHideTimer) clearTimeout(noteHideTimer);
+    if (!noteEditing) showNoteView(span);
+  }
+});
+document.addEventListener("mouseout", (e) => {
+  const span = e.target.closest && e.target.closest(".nina-highlight-span");
+  if (span) scheduleHideNote();
+});
+
+/* ===================== PAGE NOTE WIDGET ===================== */
+let pageNoteWidget = null;
+
+function renderPageNoteWidget() {
+  if (!ninaSettings.pageNotes) {
+    if (pageNoteWidget) { pageNoteWidget.remove(); pageNoteWidget = null; }
+    return;
+  }
+  if (!document.body) return;
+  chrome.storage.local.get({ highlights: [], activeProjectId: "proj_standard" }, (res) => {
+    const active = res.activeProjectId || "proj_standard";
+    const url = ninaCleanUrl(window.location.href);
+    const noteObj = (res.highlights || []).find(h =>
+      h.type === "pagenote" && h.projectId === active && ninaCleanUrl(h.url) === url
+    );
+    buildPageNoteWidget(noteObj ? noteObj.note : "");
+  });
+}
+
+function buildPageNoteWidget(note) {
+  const wasOpen = pageNoteWidget && !pageNoteWidget.querySelector(".npn-panel").hidden;
+  if (!pageNoteWidget) {
+    pageNoteWidget = document.createElement("div");
+    pageNoteWidget.id = "nina-page-note";
+    document.body.appendChild(pageNoteWidget);
+  }
+  pageNoteWidget.setAttribute("data-has", note ? "1" : "0");
+  const preview = note ? ninaEscape(note.length > 70 ? note.slice(0, 70) + "…" : note) : "Seiten-Notiz";
+  pageNoteWidget.innerHTML = `
+    <button class="npn-tab" title="Notiz zu dieser Seite">
+      <svg viewBox="0 0 24 24"><path d="M3 18h12v-2H3v2zM3 6v2h18V6H3zm0 7h18v-2H3v2z"/></svg>
+      <span class="npn-preview">${preview}</span>
+    </button>
+    <div class="npn-panel" ${wasOpen ? "" : "hidden"}>
+      <div class="npn-head">Notiz zu dieser Seite</div>
+      <textarea class="npn-area" placeholder="Was ist auf dieser Seite wichtig?">${ninaEscape(note)}</textarea>
+      <div class="npn-actions">
+        <button class="npn-delete" ${note ? "" : "disabled"}>Löschen</button>
+        <span class="npn-spacer"></span>
+        <button class="npn-close">Schließen</button>
+        <button class="npn-save">Speichern</button>
+      </div>
+    </div>`;
+  const panel = pageNoteWidget.querySelector(".npn-panel");
+  const area = pageNoteWidget.querySelector(".npn-area");
+  pageNoteWidget.querySelector(".npn-tab").addEventListener("click", () => {
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) area.focus();
+  });
+  pageNoteWidget.querySelector(".npn-close").addEventListener("click", () => { panel.hidden = true; });
+  pageNoteWidget.querySelector(".npn-save").addEventListener("click", () => savePageNote(area.value));
+  pageNoteWidget.querySelector(".npn-delete").addEventListener("click", () => savePageNote(""));
+}
+
+function savePageNote(value) {
+  chrome.storage.local.get({ highlights: [], activeProjectId: "proj_standard" }, (res) => {
+    const active = res.activeProjectId || "proj_standard";
+    const hs = res.highlights || [];
+    const url = window.location.href;
+    const val = value.trim();
+    const idx = hs.findIndex(h => h.type === "pagenote" && h.projectId === active && ninaCleanUrl(h.url) === ninaCleanUrl(url));
+    if (idx !== -1) {
+      if (val) hs[idx].note = val;
+      else hs.splice(idx, 1);
+    } else if (val) {
+      hs.push({
+        id: "nina_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now(),
+        type: "pagenote", url, title: document.title || "Seite", note: val,
+        timestamp: Date.now(), projectId: active, category: "", tags: [], order: Date.now()
+      });
+    }
+    chrome.storage.local.set({ highlights: hs }, () => {
+      ninaToast(val ? "Seiten-Notiz gespeichert" : "Seiten-Notiz gelöscht");
+    });
+  });
+}
 
 // Image Save Hover Logic
 let activeHoveredImage = null;
@@ -668,9 +890,10 @@ document.addEventListener("mouseout", handleImageMouseOut);
 
 // Run Setup
 initFloatingButton();
+function ninaInitView() { loadSavedHighlights(); renderPageNoteWidget(); }
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", loadSavedHighlights);
+  document.addEventListener("DOMContentLoaded", ninaInitView);
 } else {
-  loadSavedHighlights();
+  ninaInitView();
 }
-window.addEventListener("load", loadSavedHighlights);
+window.addEventListener("load", ninaInitView);

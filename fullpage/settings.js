@@ -4,6 +4,8 @@ const DEFAULT_SETTINGS = {
   sortDescending: true,
   floatingButton: true,
   imageSave: true,
+  hoverNotes: true,
+  pageNotes: true,
   includeDate: true,
   citationStyle: "de"
 };
@@ -12,6 +14,8 @@ let currentSettings = { ...DEFAULT_SETTINGS };
 
 const floatingBtnToggle = document.getElementById("floating-btn");
 const imageSaveToggle = document.getElementById("image-save");
+const hoverNotesToggle = document.getElementById("hover-notes");
+const pageNotesToggle = document.getElementById("page-notes");
 const includeDateToggle = document.getElementById("include-date");
 const citationStyleSelect = document.getElementById("citation-style");
 const deleteAllBtn = document.getElementById("delete-all");
@@ -26,6 +30,8 @@ function loadSettings() {
 
     floatingBtnToggle.checked = currentSettings.floatingButton;
     imageSaveToggle.checked = currentSettings.imageSave;
+    hoverNotesToggle.checked = currentSettings.hoverNotes;
+    pageNotesToggle.checked = currentSettings.pageNotes;
     includeDateToggle.checked = currentSettings.includeDate;
     citationStyleSelect.value = currentSettings.citationStyle;
   });
@@ -38,6 +44,8 @@ function saveSettings() {
     ...currentSettings,
     floatingButton: floatingBtnToggle.checked,
     imageSave: imageSaveToggle.checked,
+    hoverNotes: hoverNotesToggle.checked,
+    pageNotes: pageNotesToggle.checked,
     includeDate: includeDateToggle.checked,
     citationStyle: citationStyleSelect.value
   };
@@ -49,6 +57,8 @@ function saveSettings() {
 
 floatingBtnToggle.addEventListener("change", saveSettings);
 imageSaveToggle.addEventListener("change", saveSettings);
+hoverNotesToggle.addEventListener("change", saveSettings);
+pageNotesToggle.addEventListener("change", saveSettings);
 includeDateToggle.addEventListener("change", saveSettings);
 citationStyleSelect.addEventListener("change", saveSettings);
 

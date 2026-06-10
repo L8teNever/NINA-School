@@ -304,6 +304,16 @@ function renderQuotesList(sourceHighlights) {
             <div class="file-size">${formatBytes(h.fileSize)}</div>
           </div>
         </div>`;
+    } else if (h.type === "page") {
+      cardContent = `<div class="quote-page-note">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
+        Seite als Quelle gemerkt
+      </div>`;
+    } else if (h.type === "pagenote") {
+      cardContent = `<div class="quote-page-note">
+        <svg viewBox="0 0 24 24"><path d="M3 18h12v-2H3v2zM3 6v2h18V6H3zm0 7h18v-2H3v2z"/></svg>
+        ${escapeHtml(h.note ? (h.note.length > 120 ? h.note.slice(0, 120) + "…" : h.note) : "Seiten-Notiz")}
+      </div>`;
     } else {
       cardContent = `<div class="quote-text">${escapeHtml(h.text || "(leere Notiz)")}</div>`;
     }
@@ -313,7 +323,7 @@ function renderQuotesList(sourceHighlights) {
         <svg viewBox="0 0 24 24"><path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7z"/></svg>
       </button>` : "";
 
-    const citeBtn = !isIdea ? `
+    const citeBtn = (!isIdea && h.type !== "pagenote") ? `
       <button class="quote-btn cite-btn" data-id="${h.id}" title="Kurzbeleg kopieren">
         <svg viewBox="0 0 24 24"><path d="M6 17h3l2-4V7H5v6h3l-2 4zm8 0h3l2-4V7h-6v6h3l-2 4z"/></svg>
       </button>` : "";
@@ -348,6 +358,8 @@ function renderQuotesList(sourceHighlights) {
       let copyText = "";
       if (isIdea) {
         copyText = h.text || "";
+      } else if (h.type === "pagenote") {
+        copyText = `Seiten-Notiz: ${h.note || ""}\nQuelle: ${h.url}`;
       } else if (h.type === "image") {
         copyText = `[Bildquelle]\n${NinaCite.formatReference(h, citationStyle, includeDate)}`;
       } else if (h.type === "file") {
@@ -452,5 +464,12 @@ function formatBytes(bytes) {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
+
+// Esc: close the new-project modal, otherwise go back from details to sources
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  if (projectModal.style.display === "flex") { hideProjectModal(); return; }
+  if (currentView === "details") goBackToSources();
+});
 
 document.addEventListener("DOMContentLoaded", init);

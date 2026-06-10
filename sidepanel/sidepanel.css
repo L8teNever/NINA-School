@@ -374,6 +374,20 @@ button { font-family: inherit; }
 }
 .quote-file-container .file-size { font-size: 10px; color: var(--text-3); }
 
+.quote-page-note {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  background: var(--bg-2);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-sm);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+.quote-page-note svg { width: 16px; height: 16px; fill: var(--cyan); flex-shrink: 0; }
+
 /* ===== EMPTY STATE ===== */
 .empty-state {
   flex: 1;
